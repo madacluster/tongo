@@ -13,6 +13,9 @@ spec:
       containers:
       - image: ghcr.io/madacluster/tongo:master
         name: tongo
+        env:
+          - name: LANGUI_MENTI_URL
+            value: https://mentor.com
         resources: {}
       restartPolicy: Never
 status: {}
