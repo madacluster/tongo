@@ -50,7 +50,7 @@ func main() {
 	var url string
 
 	var rootCmd = &cobra.Command{
-		Use:   "TONGO",
+		Use:   "tongo",
 		Short: "Vote several time to menti.com/",
 		Long:  `Vote several time to menti.com/`,
 		Args:  cobra.MinimumNArgs(0),
