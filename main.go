@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -14,7 +13,6 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gocolly/colly"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 type Config struct {
@@ -50,24 +48,23 @@ func main() {
 	var loop int
 	var value int
 	var url string
-	viper.AutomaticEnv()
 
 	var rootCmd = &cobra.Command{
-		Use:   "hack the scrums",
+		Use:   "TONGO",
 		Short: "Vote several time to menti.com/",
 		Long:  `Vote several time to menti.com/`,
 		Args:  cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			myFigure := figure.NewColorFigure("El Langui", "", "green", true)
+			myFigure := figure.NewColorFigure("Tongo", "", "green", true)
 			myFigure.Print()
 			log.Printf("This POOL=%s will be vote %d times with a %d\n", url, loop, value)
 			vote(loop, value, url)
 		},
 	}
-	// default_loop := os.Getenv("FOO") | "1"
-	default_loop, _ := strconv.Atoi(getEnv("LANGUI_LOOP", "1"))
-	default_value, _ := strconv.Atoi(getEnv("LANGUI_VALUE", "1"))
-	default_http := getEnv("LANGUI_MENTI_URL", "")
+
+	default_loop, _ := strconv.Atoi(getEnv("TONGO_LOOP", "1"))
+	default_value, _ := strconv.Atoi(getEnv("TONGO_VALUE", "1"))
+	default_http := getEnv("TONGO_MENTI_URL", "")
 	rootCmd.Flags().IntVarP(&loop, "loop", "l", default_loop, "times to echo the input")
 	rootCmd.Flags().IntVarP(&value, "value", "v", default_value, "times to echo the input")
 	rootCmd.Flags().StringVarP(&url, "url", "u", default_http, "url (required) Ex: https://www.menti.com/1ct2pwd8ba")
@@ -87,9 +84,6 @@ func getEnv(key, fallback string) string {
 
 func vote(loop, value int, url string) {
 	c := colly.NewCollector()
-	c.WithTransport(&http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	})
 	c.OnHTML("script", func(e *colly.HTMLElement) {
 		err, presenterId, votes := getPresenterIdAndVotes(e.Text, value)
 		if err == nil {
@@ -126,11 +120,8 @@ func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value
 	req.Header.Set("content-type", "application/json; charset=UTF-8")
 	req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36")
 	req.Header.Set("x-identifier", identifier)
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-	// client := &http.Client{}
+
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
@@ -155,11 +146,7 @@ func getIdentifier(presenterId, url string) (error, string) {
 	req.Header.Set("accept", "application/json")
 	req.Header.Set("content-type", "application/json; charset=UTF-8")
 	req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36")
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-	// client := &http.Client{}
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
