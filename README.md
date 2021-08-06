@@ -3,9 +3,13 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/295ba9c21a6d24345654/maintainability)](https://codeclimate.com/github/madacluster/tongo/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/295ba9c21a6d24345654/test_coverage)](https://codeclimate.com/github/madacluster/tongo/test_coverage)
 ## Usage
 
+<<<<<<< HEAD
 
 ```bash
 
+=======
+```bash
+>>>>>>> dae6c224e3f1b1735813ad5b8d48bfcfa295c67f
 Vote several time to menti.com/
 
 Usage:
