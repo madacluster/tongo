@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"reflect"
 	"sync"
@@ -77,6 +78,8 @@ func Test_hackTheVote(t *testing.T) {
 		args args
 	}{
 		// TODO: Add test cases.
+
+		// {"test", args{"", "", Votes{}, nil, 1, 1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -144,6 +147,12 @@ func Test_getPresenterIdAndVotes(t *testing.T) {
 }
 
 func Test_getChoices(t *testing.T) {
+	jsonState := `{"questions":[{"choices": [{"id":1}]}]}`
+	var state State
+	json.Unmarshal([]byte(jsonState), &state)
+	votesExpected := Votes{
+		"1": {2, 1},
+	}
 	type args struct {
 		props State
 		value int
@@ -153,9 +162,9 @@ func Test_getChoices(t *testing.T) {
 		args args
 		want Votes
 	}{
-		// TODO: Add test cases.
-		// {""}
+		{"test", args{state, 2}, votesExpected},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getChoices(tt.args.props, tt.args.value); !reflect.DeepEqual(got, tt.want) {
