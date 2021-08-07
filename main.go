@@ -85,12 +85,12 @@ func getEnv(key, fallback string) string {
 func vote(loop, value int, url string) {
 	c := colly.NewCollector()
 	c.OnHTML("script", func(e *colly.HTMLElement) {
-		presenterId, votes, err := getPresenterIdAndVotes(e.Text, value)
+		presenterID, votes, err := getPresenterIDAndVotes(e.Text, value)
 		if err == nil {
 			var wg sync.WaitGroup
 			for i := 0; i < loop; i++ {
 				wg.Add(1)
-				go hackTheVote(presenterId, url, votes, &wg, value, i)
+				go hackTheVote(presenterID, url, votes, &wg, value, i)
 			}
 			wg.Wait()
 			log.Printf("TONGAZO HAS BEEN FINISHED\n")
@@ -141,7 +141,7 @@ func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value
 
 }
 
-func getIdentifier(presenterId, url string) (string, error) {
+func getIdentifier(presenterID, url string) (string, error) {
 	jsonStr := []byte(`{}`)
 	req, err := http.NewRequest("POST", "https://www.menti.com/core/identifiers", bytes.NewBuffer(jsonStr))
 	if err != nil {
@@ -171,7 +171,7 @@ func getIdentifier(presenterId, url string) (string, error) {
 	return response["identifier"], nil
 }
 
-func getPresenterIdAndVotes(text string, value int) (string, Votes, error) {
+func getPresenterIDAndVotes(text string, value int) (string, Votes, error) {
 	var grades Config
 	var props State
 	err := json.Unmarshal([]byte(text), &grades)
