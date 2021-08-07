@@ -104,7 +104,7 @@ func vote(loop, value int, url string) {
 
 func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value, id int) {
 	defer wg.Done()
-	identifier, err := getIdentifier(presenterId, url)
+	identifier, err := getIdentifier(url)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -141,7 +141,7 @@ func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value
 
 }
 
-func getIdentifier(presenterID, url string) (string, error) {
+func getIdentifier(url string) (string, error) {
 	jsonStr := []byte(`{}`)
 	req, err := http.NewRequest("POST", "https://www.menti.com/core/identifiers", bytes.NewBuffer(jsonStr))
 	if err != nil {

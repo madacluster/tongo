@@ -87,8 +87,7 @@ func Test_hackTheVote(t *testing.T) {
 
 func Test_getIdentifier(t *testing.T) {
 	type args struct {
-		presenterId string
-		url         string
+		url string
 	}
 	tests := []struct {
 		name    string
@@ -100,7 +99,7 @@ func Test_getIdentifier(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getIdentifier(tt.args.presenterId, tt.args.url)
+			got, err := getIdentifier(tt.args.url)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getIdentifier() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -125,6 +124,7 @@ func Test_getPresenterIdAndVotes(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		// {"vote 1",args{"1",5}}
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
