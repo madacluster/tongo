@@ -128,7 +128,7 @@ func Test_getPresenterIdAndVotes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := getPresenterIdAndVotes(tt.args.text, tt.args.value)
+			got, got1, err := getPresenterIDAndVotes(tt.args.text, tt.args.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getPresenterIdAndVotes() error = %v, wantErr %v", err, tt.wantErr)
 				return
