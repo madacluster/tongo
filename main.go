@@ -117,15 +117,10 @@ func hackTheVote(presenterID, url string, votes Votes, wg *sync.WaitGroup, value
 		Vote:         votes,
 	}
 	jsonStr, _ := json.Marshal(requestBody)
-	req, err := http.NewRequest("POST", "https://www.menti.com/core/votes/"+presenterID, bytes.NewBuffer(jsonStr))
+	req, err := createRequest("https://www.menti.com/core/votes/"+presenterID, url, jsonStr)
 	if err != nil {
 		panic(err)
 	}
-	req.Header.Set("origin", "https://menti.com")
-	req.Header.Set("referer", url)
-	req.Header.Set("accept", "application/json")
-	req.Header.Set("content-type", "application/json; charset=UTF-8")
-	req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36")
 	req.Header.Set("x-identifier", identifier)
 
 	client := &http.Client{}
@@ -145,17 +140,26 @@ func hackTheVote(presenterID, url string, votes Votes, wg *sync.WaitGroup, value
 
 }
 
-func getIdentifier(url string) (string, error) {
-	jsonStr := []byte(`{}`)
-	req, err := http.NewRequest("POST", "https://www.menti.com/core/identifiers", bytes.NewBuffer(jsonStr))
+func createRequest(host, url string, jsonStr []byte) (*http.Request, error) {
+	req, err := http.NewRequest("POST", host, bytes.NewBuffer(jsonStr))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	req.Header.Set("origin", "https://menti.com")
 	req.Header.Set("referer", url)
 	req.Header.Set("accept", "application/json")
 	req.Header.Set("content-type", "application/json; charset=UTF-8")
 	req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36")
+	return req, nil
+}
+
+func getIdentifier(url string) (string, error) {
+	jsonStr := []byte(`{}`)
+
+	req, err := createRequest("https://www.menti.com/core/identifiers", url, jsonStr)
+	if err != nil {
+		panic(err)
+	}
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
