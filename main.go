@@ -85,7 +85,7 @@ func getEnv(key, fallback string) string {
 func vote(loop, value int, url string) {
 	c := colly.NewCollector()
 	c.OnHTML("script", func(e *colly.HTMLElement) {
-		err, presenterId, votes := getPresenterIdAndVotes(e.Text, value)
+		presenterId, votes, err := getPresenterIdAndVotes(e.Text, value)
 		if err == nil {
 			var wg sync.WaitGroup
 			for i := 0; i < loop; i++ {
@@ -104,7 +104,7 @@ func vote(loop, value int, url string) {
 
 func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value, id int) {
 	defer wg.Done()
-	err, identifier := getIdentifier(presenterId, url)
+	identifier, err := getIdentifier(presenterId, url)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -114,6 +114,9 @@ func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value
 	}
 	jsonStr, _ := json.Marshal(requestBody)
 	req, err := http.NewRequest("POST", "https://www.menti.com/core/votes/"+presenterId, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		panic(err)
+	}
 	req.Header.Set("origin", "https://menti.com")
 	req.Header.Set("referer", url)
 	req.Header.Set("accept", "application/json")
@@ -138,9 +141,12 @@ func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value
 
 }
 
-func getIdentifier(presenterId, url string) (error, string) {
+func getIdentifier(presenterId, url string) (string, error) {
 	jsonStr := []byte(`{}`)
 	req, err := http.NewRequest("POST", "https://www.menti.com/core/identifiers", bytes.NewBuffer(jsonStr))
+	if err != nil {
+		panic(err)
+	}
 	req.Header.Set("origin", "https://menti.com")
 	req.Header.Set("referer", url)
 	req.Header.Set("accept", "application/json")
@@ -160,12 +166,12 @@ func getIdentifier(presenterId, url string) (error, string) {
 	var response map[string]string
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return err, ""
+		return "", err
 	}
-	return nil, response["identifier"]
+	return response["identifier"], nil
 }
 
-func getPresenterIdAndVotes(text string, value int) (error, string, Votes) {
+func getPresenterIdAndVotes(text string, value int) (string, Votes, error) {
 	var grades Config
 	var props State
 	err := json.Unmarshal([]byte(text), &grades)
@@ -173,10 +179,10 @@ func getPresenterIdAndVotes(text string, value int) (error, string, Votes) {
 		propsRaw := grades.Props.PageProps.SerializedInitialState
 		err := json.Unmarshal([]byte(propsRaw), &props)
 		if err == nil {
-			return nil, props.Pace.Presenter.PresenterID, getChoices(props, value)
+			return props.Pace.Presenter.PresenterID, getChoices(props, value), nil
 		}
 	}
-	return err, "", nil
+	return "", nil, err
 }
 
 func getChoices(props State, value int) Votes {
