@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Config
+// Config form metri
 type Config struct {
 	Props struct {
 		PageProps struct {
@@ -24,7 +24,7 @@ type Config struct {
 	} `JSON:"props"`
 }
 
-// State
+// State from metri
 type State struct {
 	Questions []struct {
 		ID      string `json:"id"`
@@ -39,10 +39,10 @@ type State struct {
 	} `json:"pace"`
 }
 
-// Votes
+// Votes object
 type Votes map[string][2]int
 
-// ResponseVotes
+// ResponseVotes object
 type ResponseVotes struct {
 	QuestionType string `json:"question_type"`
 	Vote         Votes  `json:"vote"`
@@ -66,13 +66,13 @@ func main() {
 		},
 	}
 
-	default_loop, _ := strconv.Atoi(getEnv("TONGO_LOOP", "1"))
-	default_value, _ := strconv.Atoi(getEnv("TONGO_VALUE", "1"))
-	default_http := getEnv("TONGO_MENTI_URL", "")
-	rootCmd.Flags().IntVarP(&loop, "loop", "l", default_loop, "times to echo the input")
-	rootCmd.Flags().IntVarP(&value, "value", "v", default_value, "times to echo the input")
-	rootCmd.Flags().StringVarP(&url, "url", "u", default_http, "url (required) Ex: https://www.menti.com/1ct2pwd8ba")
-	if default_http == "" {
+	defaultLoop, _ := strconv.Atoi(getEnv("TONGO_LOOP", "1"))
+	defaultValue, _ := strconv.Atoi(getEnv("TONGO_VALUE", "1"))
+	defaultHTTP := getEnv("TONGO_MENTI_URL", "")
+	rootCmd.Flags().IntVarP(&loop, "loop", "l", defaultLoop, "times to echo the input")
+	rootCmd.Flags().IntVarP(&value, "value", "v", defaultValue, "times to echo the input")
+	rootCmd.Flags().StringVarP(&url, "url", "u", defaultHTTP, "url (required) Ex: https://www.menti.com/1ct2pwd8ba")
+	if defaultHTTP == "" {
 		rootCmd.MarkPersistentFlagRequired("url")
 	}
 	rootCmd.Execute()
@@ -106,7 +106,7 @@ func vote(loop, value int, url string) {
 	c.Visit(url)
 }
 
-func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value, id int) {
+func hackTheVote(presenterID, url string, votes Votes, wg *sync.WaitGroup, value, id int) {
 	defer wg.Done()
 	identifier, err := getIdentifier(url)
 	if err != nil {
@@ -117,7 +117,7 @@ func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value
 		Vote:         votes,
 	}
 	jsonStr, _ := json.Marshal(requestBody)
-	req, err := http.NewRequest("POST", "https://www.menti.com/core/votes/"+presenterId, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", "https://www.menti.com/core/votes/"+presenterID, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		panic(err)
 	}
@@ -140,7 +140,7 @@ func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value
 		log.Println("HAHAHAHAHA LOOKS LIKE ERROR, LOOKS WHAT YOU DID ┐('～`;)┌")
 		log.Println(string(body))
 	} else {
-		log.Printf("INDEX=%d IDENTIFIER=%s POOL=%s PRESENTER=%s VOTE=%d\n", id, identifier, url, presenterId, value)
+		log.Printf("INDEX=%d IDENTIFIER=%s POOL=%s PRESENTER=%s VOTE=%d\n", id, identifier, url, presenterID, value)
 	}
 
 }
