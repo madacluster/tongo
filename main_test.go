@@ -65,7 +65,7 @@ func Test_vote(t *testing.T) {
 
 func Test_hackTheVote(t *testing.T) {
 	type args struct {
-		presenterId string
+		presenterID string
 		url         string
 		votes       Votes
 		wg          *sync.WaitGroup
@@ -80,7 +80,7 @@ func Test_hackTheVote(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			hackTheVote(tt.args.presenterId, tt.args.url, tt.args.votes, tt.args.wg, tt.args.value, tt.args.id)
+			hackTheVote(tt.args.presenterID, tt.args.url, tt.args.votes, tt.args.wg, tt.args.value, tt.args.id)
 		})
 	}
 }
