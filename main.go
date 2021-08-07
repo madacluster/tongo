@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Config form metri
 type Config struct {
 	Props struct {
 		PageProps struct {
@@ -23,6 +24,7 @@ type Config struct {
 	} `JSON:"props"`
 }
 
+// State from metri
 type State struct {
 	Questions []struct {
 		ID      string `json:"id"`
@@ -37,8 +39,10 @@ type State struct {
 	} `json:"pace"`
 }
 
+// Votes object
 type Votes map[string][2]int
 
+// ResponseVotes object
 type ResponseVotes struct {
 	QuestionType string `json:"question_type"`
 	Vote         Votes  `json:"vote"`
@@ -62,13 +66,13 @@ func main() {
 		},
 	}
 
-	default_loop, _ := strconv.Atoi(getEnv("TONGO_LOOP", "1"))
-	default_value, _ := strconv.Atoi(getEnv("TONGO_VALUE", "1"))
-	default_http := getEnv("TONGO_MENTI_URL", "")
-	rootCmd.Flags().IntVarP(&loop, "loop", "l", default_loop, "times to echo the input")
-	rootCmd.Flags().IntVarP(&value, "value", "v", default_value, "times to echo the input")
-	rootCmd.Flags().StringVarP(&url, "url", "u", default_http, "url (required) Ex: https://www.menti.com/1ct2pwd8ba")
-	if default_http == "" {
+	defaultLoop, _ := strconv.Atoi(getEnv("TONGO_LOOP", "1"))
+	defaultValue, _ := strconv.Atoi(getEnv("TONGO_VALUE", "1"))
+	defaultHTTP := getEnv("TONGO_MENTI_URL", "")
+	rootCmd.Flags().IntVarP(&loop, "loop", "l", defaultLoop, "times to echo the input")
+	rootCmd.Flags().IntVarP(&value, "value", "v", defaultValue, "times to echo the input")
+	rootCmd.Flags().StringVarP(&url, "url", "u", defaultHTTP, "url (required) Ex: https://www.menti.com/1ct2pwd8ba")
+	if defaultHTTP == "" {
 		rootCmd.MarkPersistentFlagRequired("url")
 	}
 	rootCmd.Execute()
@@ -85,12 +89,12 @@ func getEnv(key, fallback string) string {
 func vote(loop, value int, url string) {
 	c := colly.NewCollector()
 	c.OnHTML("script", func(e *colly.HTMLElement) {
-		err, presenterId, votes := getPresenterIdAndVotes(e.Text, value)
+		presenterID, votes, err := getPresenterIDAndVotes(e.Text, value)
 		if err == nil {
 			var wg sync.WaitGroup
 			for i := 0; i < loop; i++ {
 				wg.Add(1)
-				go hackTheVote(presenterId, url, votes, &wg, value, i)
+				go hackTheVote(presenterID, url, votes, &wg, value, i)
 			}
 			wg.Wait()
 			log.Printf("TONGAZO HAS BEEN FINISHED\n")
@@ -102,9 +106,9 @@ func vote(loop, value int, url string) {
 	c.Visit(url)
 }
 
-func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value, id int) {
+func hackTheVote(presenterID, url string, votes Votes, wg *sync.WaitGroup, value, id int) {
 	defer wg.Done()
-	err, identifier := getIdentifier(presenterId, url)
+	identifier, err := getIdentifier(url)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -113,7 +117,10 @@ func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value
 		Vote:         votes,
 	}
 	jsonStr, _ := json.Marshal(requestBody)
-	req, err := http.NewRequest("POST", "https://www.menti.com/core/votes/"+presenterId, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", "https://www.menti.com/core/votes/"+presenterID, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		panic(err)
+	}
 	req.Header.Set("origin", "https://menti.com")
 	req.Header.Set("referer", url)
 	req.Header.Set("accept", "application/json")
@@ -133,14 +140,17 @@ func hackTheVote(presenterId, url string, votes Votes, wg *sync.WaitGroup, value
 		log.Println("HAHAHAHAHA LOOKS LIKE ERROR, LOOKS WHAT YOU DID ┐('～`;)┌")
 		log.Println(string(body))
 	} else {
-		log.Printf("INDEX=%d IDENTIFIER=%s POOL=%s PRESENTER=%s VOTE=%d\n", id, identifier, url, presenterId, value)
+		log.Printf("INDEX=%d IDENTIFIER=%s POOL=%s PRESENTER=%s VOTE=%d\n", id, identifier, url, presenterID, value)
 	}
 
 }
 
-func getIdentifier(presenterId, url string) (error, string) {
+func getIdentifier(url string) (string, error) {
 	jsonStr := []byte(`{}`)
 	req, err := http.NewRequest("POST", "https://www.menti.com/core/identifiers", bytes.NewBuffer(jsonStr))
+	if err != nil {
+		panic(err)
+	}
 	req.Header.Set("origin", "https://menti.com")
 	req.Header.Set("referer", url)
 	req.Header.Set("accept", "application/json")
@@ -160,12 +170,12 @@ func getIdentifier(presenterId, url string) (error, string) {
 	var response map[string]string
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return err, ""
+		return "", err
 	}
-	return nil, response["identifier"]
+	return response["identifier"], nil
 }
 
-func getPresenterIdAndVotes(text string, value int) (error, string, Votes) {
+func getPresenterIDAndVotes(text string, value int) (string, Votes, error) {
 	var grades Config
 	var props State
 	err := json.Unmarshal([]byte(text), &grades)
@@ -173,10 +183,10 @@ func getPresenterIdAndVotes(text string, value int) (error, string, Votes) {
 		propsRaw := grades.Props.PageProps.SerializedInitialState
 		err := json.Unmarshal([]byte(propsRaw), &props)
 		if err == nil {
-			return nil, props.Pace.Presenter.PresenterID, getChoices(props, value)
+			return props.Pace.Presenter.PresenterID, getChoices(props, value), nil
 		}
 	}
-	return err, "", nil
+	return "", nil, err
 }
 
 func getChoices(props State, value int) Votes {
