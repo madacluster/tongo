@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Config
 type Config struct {
 	Props struct {
 		PageProps struct {
@@ -23,6 +24,7 @@ type Config struct {
 	} `JSON:"props"`
 }
 
+// State
 type State struct {
 	Questions []struct {
 		ID      string `json:"id"`
@@ -37,8 +39,10 @@ type State struct {
 	} `json:"pace"`
 }
 
+// Votes
 type Votes map[string][2]int
 
+// ResponseVotes
 type ResponseVotes struct {
 	QuestionType string `json:"question_type"`
 	Vote         Votes  `json:"vote"`
