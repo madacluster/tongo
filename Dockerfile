@@ -1,7 +1,6 @@
 FROM golang:1.16-alpine AS build
 WORKDIR /src
-RUN apk update && apk upgrade && apk add --no-cache ca-certificates
-RUN update-ca-certificates
+RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
 COPY . .
 RUN go get -d -v
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64  go build -ldflags="-w -s" -o /out/langui main.go
